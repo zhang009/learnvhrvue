@@ -101,6 +101,9 @@
                     let d=deps[i];
                     if(d.id=dep.parentId){
                         d.children=d.children.concat(dep);
+                        if(d.children.length>0){//解决添加完子部门的部门，可以删除的问题
+                            d.parent=true;
+                        }
                         return;
                     }else{
                         this.addDep2Deps(d.children,dep);
@@ -138,7 +141,8 @@
                         this.deleteRequest("system/basic/department/"+data.id).then(resp=>{
                             if(resp){
                                 //删除成功，动态的从数组里面移除一项
-                                this.removeDepFromDeps(this.deps,data.id);
+                                this.removeDepFromDeps(null,this.deps,data.id);
+
                             }
                         })
                     }).catch(() => {
@@ -150,14 +154,19 @@
                 }
 
             },
-            removeDepFromDeps(deps,id){
+            removeDepFromDeps(p,deps,id){
                 for(let i=0;i<deps.length;i++){
                     let d=deps[i];
                     if(d.id==id){
-                        deps.splice(i,1);
+                        deps.splice(i,1);//从数组里面移除一项，deps也就是树里面的children
+                        //如果parent的长度为0，就要修改父部门的属性
+                        //获取父部门
+                        if(deps.length==0){
+                            p.parent=false;
+                        }
                         return;
                     }else{
-                        this.removeDepFromDeps(d.children,id);
+                        this.removeDepFromDeps(d,d.children,id);
                     }
                 }
             },
